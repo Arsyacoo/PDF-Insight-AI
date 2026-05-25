@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { analyzeDocument, getDocument, getDocuments } from "../api/api.js";
+import AnalysisMetrics from "../components/AnalysisMetrics.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import ErrorState from "../components/ErrorState.jsx";
 import KeyPointsCard from "../components/KeyPointsCard.jsx";
@@ -50,7 +51,7 @@ export default function AnalysisPage() {
       <div className="flex flex-col gap-3 rounded-lg bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-extrabold">Document Analysis</h1>
-          <p className="text-muted">Ringkasan, poin penting, keywords, dan pertanyaan dalam bahasa Indonesia.</p>
+          <p className="text-muted">EDA, ringkasan, poin penting, keywords, dan pertanyaan dalam bahasa Indonesia.</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <select value={selected} onChange={(e) => setSelected(e.target.value)} className="rounded-lg border border-line px-3 py-2">
@@ -64,9 +65,10 @@ export default function AnalysisPage() {
       {loading && <LoadingState label="Menganalisis dokumen..." />}
       {analysis && !loading && (
         <div className="grid gap-5 lg:grid-cols-2">
+          <AnalysisMetrics metrics={analysis.metrics} pageStats={analysis.page_stats} />
           <div className="lg:col-span-2"><SummaryCard summary={analysis.summary} /></div>
           <KeyPointsCard points={analysis.key_points} />
-          <KeywordsCard keywords={analysis.keywords} />
+          <KeywordsCard keywords={analysis.keywords} keywordDetails={analysis.keyword_details} />
           <div className="lg:col-span-2">
             <SuggestedQuestions
               questions={analysis.suggested_questions}

@@ -25,7 +25,9 @@ def _write_json(path: Path, data: Any) -> None:
 
 def list_documents() -> list[dict[str, Any]]:
     documents = _read_json(DOCUMENTS_FILE, {})
-    return sorted(documents.values(), key=lambda item: item.get("upload_date", ""), reverse=True)
+    chats = _read_json(CHATS_FILE, {})
+    enriched = [_with_history_summary(document, chats) for document in documents.values()]
+    return sorted(enriched, key=lambda item: item.get("upload_date", ""), reverse=True)
 
 
 def get_document(document_id: str) -> dict[str, Any] | None:
@@ -74,3 +76,22 @@ def search_documents(query: str) -> list[dict[str, Any]]:
         for document in list_documents()
         if keyword in f"{document.get('file_name', '')} {document.get('text_preview', '')} {document.get('summary', '')}".lower()
     ]
+
+def _with_history_summary(document: dict[str, Any], chats: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
+    document_id = document.get("document_id", "")
+    chat_items = chats.get(document_id, [])
+    activities = []
+    if document.get("analysis") or document.get("summary"):
+        activities.append({"type": "analysis", "label": "Analisis dokumen tersedia"})
+    if chat_items:
+        activities.append({"type": "chat", "label": f"{len(chat_items)} chat tersimpan"})
+    if document.get("quiz"):
+        activities.append({"type": "quiz", "label": "Quiz sudah dibuat"})
+    if document.get("flashcards"):
+        activities.append({"type": "flashcards", "label": "Flashcards sudah dibuat"})
+
+    return {
+        **document,
+        "chat_count": len(chat_items),
+        "history_activities": activities,
+    }

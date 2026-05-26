@@ -27,16 +27,20 @@ def ask_groq(question: str, context: str, task: str = "chat") -> str:
     if not api_key or api_key == "your_groq_api_key_here":
         return _offline_answer(question, context)
 
-    client = Groq(api_key=api_key)
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": _build_user_prompt(question, context, task)},
-        ],
-        temperature=0.15,
-        max_tokens=1000,
-    )
+    try:
+        client = Groq(api_key=api_key)
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": _build_user_prompt(question, context, task)},
+            ],
+            temperature=0.15,
+            max_tokens=1000,
+        )
+    except Exception:
+        return _offline_answer(question, context)
+
     content = response.choices[0].message.content or "Informasi tersebut tidak ditemukan dalam dokumen."
     return clean_ai_text(content)
 

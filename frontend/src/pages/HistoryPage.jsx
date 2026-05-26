@@ -35,6 +35,8 @@ export default function HistoryPage() {
     );
   }, [documents, query]);
 
+  const groupedDocuments = useMemo(() => groupDocuments(filtered), [filtered]);
+
   return (
     <div className="mx-auto max-w-6xl space-y-5 px-5 py-8">
       <div className="rounded-lg bg-white p-5 shadow-sm">
@@ -59,7 +61,13 @@ export default function HistoryPage() {
         />
       )}
       <div className="grid gap-4">
-        {filtered.map((document) => <DocumentCard key={document.document_id} document={document} />)}
+        {groupedDocuments.map((group) => (
+          <DocumentCard
+            key={group.key}
+            document={group.primary}
+            relatedDocuments={group.documents}
+          />
+        ))}
       </div>
       <section className="rounded-lg bg-ink p-6 text-white">
         <h2 className="text-2xl font-extrabold">Bulk Export Intelligence</h2>
@@ -69,4 +77,32 @@ export default function HistoryPage() {
       </section>
     </div>
   );
+}
+
+function groupDocuments(documents) {
+  const groups = new Map();
+  documents.forEach((document) => {
+    const key = normalizeFileName(document.file_name);
+    const group = groups.get(key) || { key, documents: [] };
+    group.documents.push(document);
+    groups.set(key, group);
+  });
+
+  return Array.from(groups.values()).map((group) => {
+    const sorted = [...group.documents].sort((left, right) =>
+      String(right.upload_date || "").localeCompare(String(left.upload_date || ""))
+    );
+    return {
+      ...group,
+      documents: sorted,
+      primary: sorted[0],
+    };
+  });
+}
+
+function normalizeFileName(fileName = "") {
+  return fileName
+    .replace(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/i, "")
+    .trim()
+    .toLowerCase();
 }

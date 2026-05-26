@@ -228,7 +228,7 @@ def _important_sentences(context: str) -> list[str]:
 
 
 def _best_topic(sentence: str) -> str:
-    keywords = _keywords(sentence)
+    keywords = _keyword_texts(sentence)
     if len(keywords) >= 2:
         return f"{keywords[0]} dan {keywords[1]}"
     return keywords[0] if keywords else ""
@@ -298,19 +298,200 @@ def _shorten(text: str, limit: int) -> str:
 
 
 def _fallback_flashcards(context: str, total_cards: int) -> list[dict[str, str]]:
-    keywords = _keywords(context) or ["dokumen", "analisis"]
-    return [
-        {
-            "front": keyword.title(),
-            "back": f"Istilah penting yang muncul dalam konteks PDF terkait {keyword}.",
-        }
-        for keyword in keywords[:total_cards]
+    sentences = _flashcard_sentences(context)
+    keywords = _learning_keywords(context)
+    cards: list[dict[str, str]] = []
+    used_sentences: set[str] = set()
+
+    for keyword in keywords:
+        sentence = _sentence_for_keyword(keyword, sentences, used_sentences)
+        if not sentence:
+            continue
+        used_sentences.add(sentence)
+        cards.append(
+            {
+                "front": _flashcard_front(keyword, sentence),
+                "back": _flashcard_back(keyword, sentence),
+            }
+        )
+        if len(cards) >= total_cards:
+            return cards
+
+    for sentence in sentences:
+        if sentence in used_sentences:
+            continue
+        topic = _best_topic(sentence)
+        if not topic:
+            continue
+        cards.append(
+            {
+                "front": _flashcard_front(topic, sentence),
+                "back": _shorten(sentence, 240),
+            }
+        )
+        if len(cards) >= total_cards:
+            return cards
+
+    return cards
+
+
+def _learning_keywords(context: str) -> list[str]:
+    ignored = {
+        "fitur",
+        "model",
+        "rata",
+        "mean",
+        "feature",
+        "importance",
+        "kepada",
+        "teman",
+        "seluruh",
+        "saya",
+        "skripsi",
+        "halaman",
+        "program",
+        "studi",
+        "data",
+        "nilai",
+        "hasil",
+        "proses",
+    }
+    lower_context = context.lower()
+    priority_phrases = [
+        "machine learning",
+        "random forest",
+        "support vector machine",
+        "gradient boosting",
+        "confusion matrix",
+        "credit card fraud",
+        "kartu kredit",
+        "transaksi kartu kredit",
+        "ensemble learning",
+        "exploratory data analysis",
+        "feature importance",
+        "precision",
+        "recall",
+        "akurasi",
+        "klasifikasi",
+        "prediksi",
+    ]
+    keywords = [phrase for phrase in priority_phrases if phrase in lower_context]
+    for keyword in _keyword_texts(context):
+        normalized = keyword.lower().strip()
+        if len(normalized) < 4 or normalized in ignored:
+            continue
+        if normalized not in keywords:
+            keywords.append(normalized)
+    return keywords
+
+
+def _flashcard_sentences(context: str) -> list[str]:
+    bad_patterns = [
+        "kepada ",
+        "terima kasih",
+        "menyelesaikan skripsi",
+        "calon istri",
+        "teman seperjuangan",
+        "pondok pesantren",
+        "universitas",
+        "fakultas",
+        "program studi",
+        "halaman judul",
+        "berikut penelitian lain",
+        "yang relevan dengan judul",
+        "yang di teliti oleh",
+        "grabkios",
+        "during this",
+        "careful examination",
+        "cover various",
+    ]
+    learning_terms = [
+        "adalah",
+        "digunakan",
+        "menunjukkan",
+        "bertujuan",
+        "metode",
+        "algoritma",
+        "model",
+        "analisis",
+        "akurasi",
+        "klasifikasi",
+        "prediksi",
+        "evaluasi",
+        "dataset",
+        "fitur",
+        "machine learning",
+        "random forest",
+        "support vector",
+        "gradient boosting",
+        "penipuan",
+        "fraud",
+        "transaksi",
+        "precision",
+        "recall",
+        "confusion matrix",
+    ]
+    sentences = []
+    for sentence in _important_sentences(context):
+        lower = sentence.lower()
+        if any(pattern in lower for pattern in bad_patterns):
+            continue
+        if not any(term in lower for term in learning_terms):
+            continue
+        sentences.append(sentence)
+    return sentences or [
+        sentence
+        for sentence in _important_sentences(context)
+        if not any(pattern in sentence.lower() for pattern in bad_patterns)
     ]
 
 
+def _sentence_for_keyword(keyword: str, sentences: list[str], used_sentences: set[str]) -> str:
+    candidates = [
+        sentence
+        for sentence in sentences
+        if sentence not in used_sentences and re.search(rf"\b{re.escape(keyword)}\b", sentence, flags=re.IGNORECASE)
+    ]
+    if not candidates:
+        return ""
+    return max(candidates, key=lambda sentence: (len(_keyword_texts(sentence)), min(len(sentence), 240)))
+
+
+def _flashcard_back(keyword: str, sentence: str) -> str:
+    answer = _answer_fragment(sentence)
+    if answer == sentence and re.search(rf"\b{re.escape(keyword)}\b", sentence, flags=re.IGNORECASE):
+        return _shorten(sentence, 240)
+    return _shorten(answer, 240)
+
+
+def _flashcard_front(keyword: str, sentence: str) -> str:
+    keyword_title = keyword.title()
+    lower = sentence.lower()
+    if " digunakan untuk " in lower:
+        return f"Untuk apa {keyword_title} digunakan menurut dokumen?"
+    if " karena " in lower:
+        return f"Mengapa {keyword_title} penting dalam dokumen?"
+    if " menunjukkan bahwa " in lower:
+        return f"Apa temuan dokumen tentang {keyword_title}?"
+    return f"Apa yang dijelaskan dokumen tentang {keyword_title}?"
+
+
 def _shared_keywords(first_context: str, second_context: str) -> list[str]:
-    return sorted(set(_keywords(first_context)) & set(_keywords(second_context)))[:8]
+    return sorted(set(_keyword_texts(first_context)) & set(_keyword_texts(second_context)))[:8]
 
 
 def _unique_keywords(source_context: str, other_context: str) -> list[str]:
-    return sorted(set(_keywords(source_context)) - set(_keywords(other_context)))[:8]
+    return sorted(set(_keyword_texts(source_context)) - set(_keyword_texts(other_context)))[:8]
+
+
+def _keyword_texts(text: str) -> list[str]:
+    keywords = _keywords(text)
+    normalized: list[str] = []
+    for item in keywords:
+        if isinstance(item, dict):
+            keyword = str(item.get("keyword", "")).strip()
+        else:
+            keyword = str(item).strip()
+        if keyword:
+            normalized.append(keyword)
+    return normalized

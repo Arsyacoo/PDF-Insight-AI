@@ -1,4 +1,4 @@
-# PDF Insight AI
+﻿# PDF Insight AI
 
 **PDF Insight AI** adalah aplikasi web full-stack berbasis AI untuk membantu pengguna memahami isi dokumen PDF lebih cepat. Pengguna dapat mengunggah PDF, mengekstrak teks, membuat ringkasan, mengambil poin penting, membuat quiz dan flashcards, membandingkan dua dokumen, serta melakukan chat dengan PDF menggunakan pendekatan Retrieval-Augmented Generation (RAG).
 
@@ -140,37 +140,55 @@ pdf-insight-ai/
 
 ## Setup Backend
 
-Masuk ke folder backend:
+> Prasyarat: install Python 3.10+ terlebih dahulu. Jalankan perintah berikut dari root project `pdf-insight-ai`.
+
+1. Masuk ke folder backend:
 
 ```bash
 cd backend
 ```
 
-Buat virtual environment:
+2. Buat virtual environment:
 
 ```bash
 python -m venv .venv
 ```
 
-Aktifkan virtual environment di Windows:
+3. Aktifkan virtual environment.
+
+Windows PowerShell / Command Prompt:
 
 ```bash
 .venv\Scripts\activate
 ```
 
-Install dependency:
+macOS / Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+4. Install dependency backend:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Salin file environment:
+5. Salin file environment.
+
+Windows:
 
 ```bash
 copy .env.example .env
 ```
 
-Jalankan backend:
+macOS / Linux:
+
+```bash
+cp .env.example .env
+```
+
+6. Jalankan backend:
 
 ```bash
 uvicorn main:app --reload
@@ -190,19 +208,21 @@ http://localhost:8000/docs
 
 ## Setup Frontend
 
-Masuk ke folder frontend:
+> Prasyarat: install Node.js LTS terlebih dahulu. Jalankan terminal baru dari root project `pdf-insight-ai`.
+
+1. Masuk ke folder frontend:
 
 ```bash
 cd frontend
 ```
 
-Install dependency:
+2. Install dependency frontend:
 
 ```bash
 npm install
 ```
 
-Jalankan frontend:
+3. Jalankan frontend:
 
 ```bash
 npm run dev
@@ -212,6 +232,12 @@ Frontend akan berjalan di:
 
 ```text
 http://localhost:5173
+```
+
+Jika backend berjalan di URL berbeda, buat file `frontend/.env` dan isi:
+
+```env
+VITE_API_BASE_URL=http://localhost:8000
 ```
 
 ## Environment Variables
@@ -295,6 +321,22 @@ Buka aplikasi di browser:
 http://localhost:5173
 ```
 
+
+## Demo Flow
+
+Gunakan alur berikut untuk mendemokan **PDF Insight AI** dari awal sampai akhir:
+
+1. Jalankan backend dengan `uvicorn main:app --reload`.
+2. Jalankan frontend dengan `npm run dev`.
+3. Buka `http://localhost:5173` di browser.
+4. Masuk ke halaman `Upload`, lalu unggah PDF berbasis teks dengan ukuran maksimal 10 MB.
+5. Buka halaman `Analysis`, pilih dokumen, lalu klik `Analyze` untuk membuat ringkasan, poin penting, keywords, dan pertanyaan saran.
+6. Buka halaman `Chat`, pilih dokumen yang sama, lalu ajukan pertanyaan tentang isi PDF.
+7. Buka halaman `Learning` untuk membuat quiz dan flashcards dari dokumen.
+8. Upload minimal dua PDF, lalu buka halaman `Compare` untuk membandingkan dokumen.
+9. Buka halaman `History` untuk melihat aktivitas per dokumen dan mengunduh hasil dalam format TXT, PDF, atau Word.
+
+
 ## Cara Upload dan Test PDF
 
 1. Jalankan backend dan frontend.
@@ -307,7 +349,7 @@ http://localhost:5173
 8. Cek source reference di bawah jawaban.
 9. Buka halaman `Learning` untuk membuat quiz dan flashcards.
 10. Upload minimal dua PDF, lalu buka halaman `Compare` untuk membandingkan dokumen.
-11. Buka halaman `History` untuk mencari dokumen dan export TXT.
+11. Buka halaman `History` untuk mencari dokumen dan export hasil aktivitas dalam format TXT, PDF, atau Word.
 
 ## Dokumentasi API
 
@@ -395,7 +437,8 @@ Response:
   "sources": [
     {
       "page_number": 1,
-      "snippet": "Cuplikan teks relevan..."
+      "snippet": "Cuplikan teks relevan sampai sekitar 300 karakter...",
+      "score": 0.82
     }
   ]
 }
@@ -537,36 +580,48 @@ GET /export-chat/{document_id}
 
 Mengunduh history chat dokumen dalam format TXT.
 
-## Screenshots
+### Export Document Activity
 
-Tambahkan screenshot aplikasi di bagian ini.
-
-```text
-screenshots/
-  landing-page.png
-  upload-page.png
-  analysis-page.png
-  chat-page.png
-  learning-page.png
-  compare-page.png
-  history-page.png
+```http
+GET /export-document/{document_id}?section=all&format=pdf
 ```
 
-Contoh placeholder:
+Pilihan `section`: `all`, `summary`, `chat`, `quiz`, `flashcards`.
 
-| Halaman | Screenshot |
-| --- | --- |
-| Landing Page | `screenshots/landing-page.png` |
-| Upload Page | `screenshots/upload-page.png` |
-| Analysis Page | `screenshots/analysis-page.png` |
-| Chat Page | `screenshots/chat-page.png` |
-| Learning Page | `screenshots/learning-page.png` |
-| Compare Page | `screenshots/compare-page.png` |
-| History Page | `screenshots/history-page.png` |
+Pilihan `format`: `txt`, `pdf`, `docx`.
+
+Mengunduh aktivitas yang pernah dilakukan pada dokumen dalam format yang dipilih.
+
+## Screenshots
+
+Simpan screenshot aplikasi di folder `screenshots/`, lalu gunakan path berikut. File placeholder sudah tersedia dan bisa diganti dengan screenshot asli aplikasi.
+
+![Landing Page](screenshots/landing-page.png)
+
+![Upload Page](screenshots/upload-page.png)
+
+![Analysis Page](screenshots/analysis-page.png)
+
+![Chat Page](screenshots/chat-page.png)
+
+![Learning Page](screenshots/learning-page.png)
+
+![Compare Page](screenshots/compare-page.png)
+
+![History Page](screenshots/history-page.png)
+
+## Project Limitations
+
+- Aplikasi ini paling baik untuk PDF berbasis teks. PDF hasil scan atau gambar murni membutuhkan OCR terlebih dahulu agar teks dapat diekstrak.
+- Fitur OCR belum tersedia secara default di project ini.
+- Kualitas ringkasan, quiz, flashcards, compare, dan chat bergantung pada kualitas teks hasil ekstraksi PDF.
+- Jika `GROQ_API_KEY` belum diatur atau Groq API gagal diakses, aplikasi memakai fallback lokal sederhana sehingga hasil AI tidak sebaik mode Groq aktif.
+- Upload PDF dibatasi maksimal 10 MB untuk menjaga performa lokal.
+- Data disimpan secara lokal dalam file JSON, sehingga belum cocok untuk skenario multi-user production.
 
 ## Future Improvements
 
-- Export hasil analisis ke PDF dan DOCX.
+- Template export PDF dan DOCX yang lebih kaya secara visual.
 - OCR untuk PDF hasil scan.
 - Highlight teks sumber langsung pada preview PDF.
 - Authentication untuk multi-user.
@@ -593,3 +648,4 @@ Teknologi dan layanan yang digunakan:
 - Lucide React
 
 UI awal diadaptasi dari referensi desain Google Stitch dan disesuaikan menjadi aplikasi React + Tailwind yang modular.
+

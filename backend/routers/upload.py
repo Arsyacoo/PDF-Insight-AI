@@ -1,5 +1,4 @@
-import shutil
-import uuid
+﻿import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
@@ -11,20 +10,30 @@ from services.vector_service import VectorService
 
 router = APIRouter(tags=["Upload"])
 UPLOAD_DIR = Path(__file__).resolve().parents[1] / "uploads"
+MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024
+PDF_MAGIC_HEADER = b"%PDF-"
 
 
 @router.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
-    if file.content_type != "application/pdf" and not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="File harus berformat PDF.")
+    safe_name = Path(file.filename or "").name
+    if not safe_name:
+        raise HTTPException(status_code=400, detail="Nama file tidak boleh kosong.")
+    if Path(safe_name).suffix.lower() != ".pdf":
+        raise HTTPException(status_code=400, detail="File harus memiliki ekstensi .pdf.")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="File PDF tidak boleh kosong.")
+    if len(content) > MAX_PDF_SIZE_BYTES:
+        raise HTTPException(status_code=413, detail="Ukuran file PDF maksimal 10 MB.")
+    if not content.startswith(PDF_MAGIC_HEADER):
+        raise HTTPException(status_code=400, detail="File tidak valid. Header PDF harus diawali dengan %PDF-.")
 
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     document_id = str(uuid.uuid4())
-    safe_name = Path(file.filename).name
     file_path = UPLOAD_DIR / f"{document_id}-{safe_name}"
-
-    with file_path.open("wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    file_path.write_bytes(content)
 
     try:
         extracted = extract_pdf_text(file_path)

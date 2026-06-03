@@ -1,14 +1,13 @@
-import { ArrowRight, BrainCircuit, FileSearch, GitCompareArrows, Layers3, MessageSquareText, UploadCloud } from "lucide-react";
+﻿import { ArrowRight, BrainCircuit, FileSearch, GitCompareArrows, Layers3, MessageSquareText, UploadCloud } from "lucide-react";
 import { Link } from "react-router-dom";
+import logoWordmark from "../assets/logo-wordmark.svg";
 
 export default function LandingPage() {
   return (
     <div>
       <section className="mx-auto grid max-w-7xl gap-10 px-5 py-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
         <div>
-          <h1 className="max-w-3xl text-5xl font-extrabold leading-tight tracking-normal text-ink md:text-6xl">
-            PDF Insight AI
-          </h1>
+          <img src={logoWordmark} alt="PDF Insight AI" className="h-auto w-full max-w-md" />
           <p className="mt-5 max-w-2xl text-xl leading-8 text-muted">
             Upload PDF, buat ringkasan, temukan poin penting, dan tanyakan isi dokumen dengan RAG berbasis konteks lokal.
           </p>

@@ -1,3 +1,4 @@
+﻿import logging
 import os
 import re
 from pathlib import Path
@@ -7,6 +8,8 @@ from groq import Groq
 
 ENV_PATH = Path(__file__).resolve().parents[1] / ".env"
 load_dotenv(ENV_PATH)
+
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = (
     "Kamu adalah PDF Insight AI, asisten akademik untuk memahami isi dokumen PDF. "
@@ -38,7 +41,13 @@ def ask_groq(question: str, context: str, task: str = "chat") -> str:
             temperature=0.15,
             max_tokens=1000,
         )
-    except Exception:
+    except Exception as exc:
+        logger.warning(
+            "Groq API request failed; using offline fallback. task=%s model=%s error=%s",
+            task,
+            model,
+            exc,
+        )
         return _offline_answer(question, context)
 
     content = response.choices[0].message.content or "Informasi tersebut tidak ditemukan dalam dokumen."
@@ -128,3 +137,7 @@ def _split_sentences(text: str) -> list[str]:
     if len(tail) > 20:
         sentences.append(tail)
     return sentences or [normalized[:900]]
+
+
+
+

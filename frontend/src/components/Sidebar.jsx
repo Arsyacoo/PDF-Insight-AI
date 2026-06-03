@@ -1,5 +1,6 @@
-import { BarChart3, BrainCircuit, Clock3, FileUp, GitCompareArrows, Home, MessageSquareText, Share2 } from "lucide-react";
+﻿import { BarChart3, BrainCircuit, Clock3, FileUp, GitCompareArrows, Home, MessageSquareText, Share2 } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import logo from "../assets/logo.svg";
 
 const links = [
   { to: "/", label: "Home", icon: Home },
@@ -15,9 +16,12 @@ export default function Sidebar() {
   return (
     <>
       <aside className="fixed left-0 top-0 z-50 hidden h-screen w-64 flex-col border-r border-line bg-soft p-4 md:flex">
-        <div className="mb-8 px-2">
-          <h1 className="text-2xl font-extrabold text-primary">PDF Insight AI</h1>
-          <p className="text-sm font-medium text-muted">Smart Analysis</p>
+        <div className="mb-8 flex items-center gap-3 px-2">
+          <img src={logo} alt="PDF Insight AI logo" className="h-12 w-12 shrink-0" />
+          <div>
+            <h1 className="text-xl font-extrabold text-primary">PDF Insight AI</h1>
+            <p className="text-sm font-medium text-muted">Smart Analysis</p>
+          </div>
         </div>
         <NavLink to="/upload" className="ai-gradient mb-6 flex items-center justify-center gap-2 rounded-lg px-4 py-3 font-semibold text-white shadow-soft">
           <FileUp size={18} /> New Analysis

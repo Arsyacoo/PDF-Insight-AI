@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
@@ -31,3 +31,9 @@ export const compareDocuments = async (first_document_id, second_document_id) =>
 export function exportUrl(type, documentId) {
   return `${API_BASE_URL}/${type === "chat" ? "export-chat" : "export-summary"}/${documentId}`;
 }
+
+export function exportActivityUrl(documentId, section = "all", format = "txt") {
+  const params = new URLSearchParams({ section, format });
+  return `${API_BASE_URL}/export-document/${documentId}?${params.toString()}`;
+}
+

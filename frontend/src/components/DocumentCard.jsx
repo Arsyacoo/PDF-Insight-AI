@@ -1,6 +1,20 @@
-import { BarChart3, BookOpenCheck, Download, FileText, Layers3, MessageSquareText } from "lucide-react";
+ï»¿import { BarChart3, BookOpenCheck, Download, FileText, Layers3, MessageSquareText } from "lucide-react";
 import { Link } from "react-router-dom";
-import { exportUrl } from "../api/api.js";
+import { exportActivityUrl } from "../api/api.js";
+
+const EXPORT_SECTIONS = [
+  ["all", "Semua Aktivitas"],
+  ["summary", "Ringkasan"],
+  ["chat", "Chat"],
+  ["quiz", "Quiz"],
+  ["flashcards", "Flashcards"],
+];
+
+const EXPORT_FORMATS = [
+  ["txt", "TXT"],
+  ["pdf", "PDF"],
+  ["docx", "Word"],
+];
 
 export default function DocumentCard({ document, relatedDocuments = [] }) {
   const documents = relatedDocuments.length ? relatedDocuments : [document];
@@ -17,8 +31,8 @@ export default function DocumentCard({ document, relatedDocuments = [] }) {
           <div>
             <h3 className="font-bold text-ink">{cleanFileName(document.file_name)}</h3>
             <p className="mt-1 text-sm text-muted">
-              {document.total_pages} halaman • {document.chunk_count || 0} chunk
-              {duplicateCount > 1 && ` • ${duplicateCount} upload digabung`}
+              {document.total_pages} halaman â€¢ {document.chunk_count || 0} chunk
+              {duplicateCount > 1 && ` â€¢ ${duplicateCount} upload digabung`}
             </p>
             <p className="mt-2 line-clamp-2 max-w-2xl text-sm text-muted">{document.text_preview}</p>
           </div>
@@ -33,12 +47,7 @@ export default function DocumentCard({ document, relatedDocuments = [] }) {
           <Link to="/learning" className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-primary">
             Learning
           </Link>
-          <a href={exportUrl("summary", document.document_id)} className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-muted">
-            <Download className="inline" size={15} /> Summary
-          </a>
-          <a href={exportUrl("chat", document.document_id)} className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-muted">
-            <MessageSquareText className="inline" size={15} /> Chat
-          </a>
+          <ExportMenu documentId={document.document_id} activities={activities} />
         </div>
       </div>
       <div className="mt-4 rounded-lg bg-soft p-4">
@@ -57,6 +66,41 @@ export default function DocumentCard({ document, relatedDocuments = [] }) {
         )}
       </div>
     </article>
+  );
+}
+
+function ExportMenu({ documentId, activities }) {
+  const availableSections = EXPORT_SECTIONS.filter(([section]) =>
+    section === "all" || activities.some((activity) => activity.type === section || (section === "summary" && activity.type === "analysis"))
+  );
+
+  return (
+    <div className="group relative">
+      <button type="button" className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-muted">
+        <Download className="inline" size={15} /> Download
+      </button>
+      <div className="pointer-events-none absolute right-0 z-20 mt-2 w-72 rounded-lg border border-line bg-white p-3 opacity-0 shadow-lg transition group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+        <p className="text-sm font-bold text-ink">Pilih aktivitas & format</p>
+        <div className="mt-3 space-y-3">
+          {availableSections.map(([section, label]) => (
+            <div key={section}>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {EXPORT_FORMATS.map(([format, formatLabel]) => (
+                  <a
+                    key={`${section}-${format}`}
+                    href={exportActivityUrl(documentId, section, format)}
+                    className="rounded-md bg-soft px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-indigo-100"
+                  >
+                    {formatLabel}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 

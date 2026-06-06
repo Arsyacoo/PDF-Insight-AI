@@ -1,6 +1,7 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { uploadPdf } from "../api/api.js";
+import DocumentQualityCard from "../components/DocumentQualityCard.jsx";
 import ErrorState from "../components/ErrorState.jsx";
 import UploadBox from "../components/UploadBox.jsx";
 
@@ -40,19 +41,22 @@ export default function UploadPage() {
         <ErrorState message={error} />
       </div>
       {result && (
-        <section className="mt-5 rounded-lg border border-green-200 bg-green-50 p-5">
-          <h2 className="text-xl font-bold text-success">{result.message}</h2>
-          <p className="mt-2 text-muted">{result.file_name} • {result.total_pages} halaman</p>
-          <p className="mt-3 line-clamp-3 text-sm text-muted">{result.text_preview}</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button onClick={() => navigate(`/analysis/${result.document_id}`)} className="rounded-lg bg-primary px-4 py-2 font-semibold text-white">
-              Buat Analisis
-            </button>
-            <Link to={`/chat/${result.document_id}`} className="rounded-lg border border-line bg-white px-4 py-2 font-semibold text-primary">
-              Chat PDF
-            </Link>
-          </div>
-        </section>
+        <div className="mt-5 space-y-5">
+          <section className="rounded-lg border border-green-200 bg-green-50 p-5">
+            <h2 className="text-xl font-bold text-success">{result.message}</h2>
+            <p className="mt-2 text-muted">{result.file_name} • {result.total_pages} halaman</p>
+            <p className="mt-3 line-clamp-3 text-sm text-muted">{result.text_preview}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button onClick={() => navigate(`/analysis/${result.document_id}`)} className="rounded-lg bg-primary px-4 py-2 font-semibold text-white">
+                Buat Analisis
+              </button>
+              <Link to={`/chat/${result.document_id}`} className="rounded-lg border border-line bg-white px-4 py-2 font-semibold text-primary">
+                Chat PDF
+              </Link>
+            </div>
+          </section>
+          <DocumentQualityCard quality={result.quality} />
+        </div>
       )}
     </div>
   );

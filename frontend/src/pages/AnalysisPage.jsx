@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { analyzeDocument, getDocument, getDocuments } from "../api/api.js";
 import AnalysisMetrics from "../components/AnalysisMetrics.jsx";
+import DocumentQualityCard from "../components/DocumentQualityCard.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import ErrorState from "../components/ErrorState.jsx";
 import KeyPointsCard from "../components/KeyPointsCard.jsx";
@@ -15,6 +16,7 @@ export default function AnalysisPage() {
   const [documents, setDocuments] = useState([]);
   const [selected, setSelected] = useState(documentId || "");
   const [analysis, setAnalysis] = useState(null);
+  const [quality, setQuality] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -25,9 +27,22 @@ export default function AnalysisPage() {
       setDocuments(docs);
       const active = documentId || docs[0]?.document_id || "";
       setSelected(active);
-      if (active) getDocument(active).then((doc) => setAnalysis(doc.analysis || null));
+      if (active) hydrateDocument(active);
     }).catch(() => setError("Tidak dapat memuat daftar dokumen."));
   }, [documentId]);
+
+  async function hydrateDocument(id) {
+    const doc = await getDocument(id);
+    setAnalysis(doc.analysis || null);
+    setQuality(doc.quality || null);
+  }
+
+  async function handleSelect(id) {
+    setSelected(id);
+    setSuccess("");
+    setError("");
+    await hydrateDocument(id);
+  }
 
   async function runAnalysis(id = selected) {
     if (!id) return;
@@ -36,6 +51,7 @@ export default function AnalysisPage() {
     setSuccess("");
     try {
       setAnalysis(await analyzeDocument(id));
+      await hydrateDocument(id);
       setSuccess("Analisis berhasil dibuat. Pertanyaan saran bisa langsung dipakai untuk chat.");
     } catch (err) {
       setError(err.response?.data?.detail || "Analisis gagal.");
@@ -54,7 +70,7 @@ export default function AnalysisPage() {
           <p className="text-muted">EDA, ringkasan, poin penting, keywords, dan pertanyaan dalam bahasa Indonesia.</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <select value={selected} onChange={(e) => setSelected(e.target.value)} className="rounded-lg border border-line px-3 py-2">
+          <select value={selected} onChange={(e) => handleSelect(e.target.value)} className="rounded-lg border border-line px-3 py-2">
             {documents.map((doc) => <option key={doc.document_id} value={doc.document_id}>{doc.file_name}</option>)}
           </select>
           <button onClick={() => runAnalysis()} className="rounded-lg bg-primary px-4 py-2 font-semibold text-white">Analyze</button>
@@ -62,6 +78,7 @@ export default function AnalysisPage() {
       </div>
       {success && <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm font-semibold text-success">{success}</div>}
       <ErrorState message={error} />
+      {quality && <DocumentQualityCard quality={quality} />}
       {loading && <LoadingState label="Menganalisis dokumen..." />}
       {analysis && !loading && (
         <div className="grid gap-5 lg:grid-cols-2">

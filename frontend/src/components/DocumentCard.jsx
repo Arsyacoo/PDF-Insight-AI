@@ -1,6 +1,7 @@
 ﻿import { BarChart3, BookOpenCheck, Download, FileText, Layers3, MessageSquareText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { exportActivityUrl } from "../api/api.js";
+import ExportReportButtons from "./ExportReportButtons.jsx";
 
 const EXPORT_SECTIONS = [
   ["all", "Semua Aktivitas"],
@@ -48,6 +49,7 @@ export default function DocumentCard({ document, relatedDocuments = [] }) {
             Learning
           </Link>
           <ExportMenu documentId={document.document_id} activities={activities} />
+          <ExportReportButtons documentId={document.document_id} />
         </div>
       </div>
       <div className="mt-4 rounded-lg bg-soft p-4">
@@ -131,3 +133,5 @@ function ActivityIcon({ type }) {
 function cleanFileName(fileName = "") {
   return fileName.replace(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/i, "");
 }
+
+

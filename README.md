@@ -7,6 +7,12 @@ Project ini dirancang sebagai **student capstone project** atau **portfolio proj
 ## Fitur Utama
 
 - Upload file PDF dengan validasi format.
+- Preview PDF langsung di halaman chat.
+- Clickable source references untuk membuka halaman PDF terkait.
+- Confidence score dan confidence label pada setiap source reference.
+- RAG retrieval details untuk menjelaskan chunk yang dipakai sebagai konteks AI.
+- Document quality checker untuk mendeteksi kualitas teks dan kemungkinan PDF scan.
+- Export full analysis report ke PDF dan DOCX.
 - Ekstraksi teks dari PDF berbasis teks.
 - Pemecahan teks menjadi chunk untuk kebutuhan RAG.
 - Embedding lokal untuk pencarian konteks dokumen.
@@ -49,13 +55,15 @@ Project ini dirancang sebagai **student capstone project** atau **portfolio proj
 - ChromaDB opsional
 - Groq API
 - python-dotenv
+- reportlab
+- python-docx
 
 **Local Storage**
 
 - Upload PDF: `backend/uploads`
 - Data dokumen dan chat: `backend/data`
 - Vector store lokal: `backend/vector_store`
-- Export TXT: `backend/exports`
+- Export TXT/PDF/DOCX: `backend/exports`
 
 ## Arsitektur Sistem
 
@@ -173,6 +181,14 @@ source .venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+Dependency tambahan untuk export full report:
+
+```bash
+pip install reportlab python-docx
+```
+
+Dependency ini juga sudah tercantum di `backend/requirements.txt`.
+
 
 5. Salin file environment.
 
@@ -331,10 +347,10 @@ Gunakan alur berikut untuk mendemokan **PDF Insight AI** dari awal sampai akhir:
 3. Buka `http://localhost:5173` di browser.
 4. Masuk ke halaman `Upload`, lalu unggah PDF berbasis teks dengan ukuran maksimal 10 MB.
 5. Buka halaman `Analysis`, pilih dokumen, lalu klik `Analyze` untuk membuat ringkasan, poin penting, keywords, dan pertanyaan saran.
-6. Buka halaman `Chat`, pilih dokumen yang sama, lalu ajukan pertanyaan tentang isi PDF.
+6. Buka halaman `Chat`, pilih dokumen yang sama, lalu ajukan pertanyaan tentang isi PDF. Gunakan source reference untuk membuka halaman PDF yang relevan.
 7. Buka halaman `Learning` untuk membuat quiz dan flashcards dari dokumen.
 8. Upload minimal dua PDF, lalu buka halaman `Compare` untuk membandingkan dokumen.
-9. Buka halaman `History` untuk melihat aktivitas per dokumen dan mengunduh hasil dalam format TXT, PDF, atau Word.
+9. Buka halaman `History` untuk melihat aktivitas per dokumen dan mengunduh hasil dalam format TXT, PDF, Word, Full Report PDF, atau Full Report DOCX.
 
 
 ## Cara Upload dan Test PDF
@@ -564,6 +580,14 @@ GET /documents/{document_id}
 
 Response berisi detail dokumen dan `chat_history`.
 
+### Preview PDF File
+
+```http
+GET /documents/{document_id}/file
+```
+
+Mengembalikan file PDF yang sudah diunggah secara aman untuk kebutuhan preview di browser.
+
 ### Export Summary
 
 ```http
@@ -592,6 +616,22 @@ Pilihan `format`: `txt`, `pdf`, `docx`.
 
 Mengunduh aktivitas yang pernah dilakukan pada dokumen dalam format yang dipilih.
 
+### Export Full Report PDF
+
+```http
+GET /export-report-pdf/{document_id}
+```
+
+Mengunduh laporan lengkap analisis dokumen dalam format PDF.
+
+### Export Full Report DOCX
+
+```http
+GET /export-report-docx/{document_id}
+```
+
+Mengunduh laporan lengkap analisis dokumen dalam format Word/DOCX.
+
 ## Screenshots
 
 Simpan screenshot aplikasi di folder `screenshots/`, lalu gunakan path berikut. File placeholder sudah tersedia dan bisa diganti dengan screenshot asli aplikasi.
@@ -618,6 +658,12 @@ Simpan screenshot aplikasi di folder `screenshots/`, lalu gunakan path berikut. 
 - Jika `GROQ_API_KEY` belum diatur atau Groq API gagal diakses, aplikasi memakai fallback lokal sederhana sehingga hasil AI tidak sebaik mode Groq aktif.
 - Upload PDF dibatasi maksimal 10 MB untuk menjaga performa lokal.
 - Data disimpan secara lokal dalam file JSON, sehingga belum cocok untuk skenario multi-user production.
+
+- Full OCR belum diimplementasikan; PDF scan tetap membutuhkan proses OCR eksternal.
+
+- PDF preview menggunakan dukungan PDF bawaan browser melalui object/embed, sehingga perilakunya bisa berbeda antar browser.
+
+- Navigasi source reference membuka halaman terkait, tetapi belum melakukan highlight teks presisi di dalam PDF.
 
 ## Future Improvements
 

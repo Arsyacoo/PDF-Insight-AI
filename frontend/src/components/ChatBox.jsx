@@ -1,10 +1,11 @@
-import { SendHorizonal } from "lucide-react";
+﻿import { SendHorizonal } from "lucide-react";
+import RetrievalDetails from "./RetrievalDetails.jsx";
 import SourceReference from "./SourceReference.jsx";
 
-export default function ChatBox({ messages, value, onChange, onSubmit, loading }) {
+export default function ChatBox({ messages, value, onChange, onSubmit, loading, onSourceClick, activeSource }) {
   return (
     <section className="rounded-lg border border-line bg-white shadow-sm">
-      <div className="max-h-[58vh] min-h-96 space-y-5 overflow-y-auto p-4 sm:p-5">
+      <div className="max-h-[70vh] min-h-96 space-y-5 overflow-y-auto p-4 sm:p-5">
         {messages.length === 0 && (
           <div className="rounded-lg bg-soft p-5 text-center text-muted">
             Ajukan pertanyaan tentang PDF. Jawaban akan dibatasi pada konteks dokumen.
@@ -18,10 +19,16 @@ export default function ChatBox({ messages, value, onChange, onSubmit, loading }
               {message.sources?.length > 0 && (
                 <div className="mt-4 space-y-2">
                   {message.sources.map((source, sourceIndex) => (
-                    <SourceReference key={sourceIndex} source={source} />
+                    <SourceReference
+                      key={sourceIndex}
+                      source={source}
+                      active={activeSource?.page_number === source.page_number && activeSource?.snippet === source.snippet}
+                      onClick={onSourceClick}
+                    />
                   ))}
                 </div>
               )}
+              <RetrievalDetails details={message.retrieval_details} />
             </div>
           </div>
         ))}
@@ -35,7 +42,7 @@ export default function ChatBox({ messages, value, onChange, onSubmit, loading }
           placeholder="Tanyakan isi PDF..."
         />
         <button disabled={loading} className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-white disabled:opacity-60">
-          <SendHorizonal size={18} /> Kirim
+          <SendHorizonal size={18} /> Send
         </button>
       </form>
     </section>

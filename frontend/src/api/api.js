@@ -37,3 +37,11 @@ export function exportActivityUrl(documentId, section = "all", format = "txt") {
   return `${API_BASE_URL}/export-document/${documentId}?${params.toString()}`;
 }
 
+
+export function documentFileUrl(documentId, page = 1) {
+  return `${API_BASE_URL}/documents/${documentId}/file#page=${page || 1}`;
+}
+
+export function exportReportUrl(documentId, format = "pdf") {
+  return `${API_BASE_URL}/${format === "docx" ? "export-report-docx" : "export-report-pdf"}/${documentId}`;
+}

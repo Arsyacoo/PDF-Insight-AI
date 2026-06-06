@@ -1,4 +1,4 @@
-import json
+﻿import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -50,13 +50,14 @@ def update_document(document_id: str, values: dict[str, Any]) -> dict[str, Any]:
     return document
 
 
-def add_chat(document_id: str, question: str, answer: str, sources: list[dict[str, Any]]) -> None:
+def add_chat(document_id: str, question: str, answer: str, sources: list[dict[str, Any]], retrieval_details: dict[str, Any] | None = None) -> None:
     chats = _read_json(CHATS_FILE, {})
     chats.setdefault(document_id, []).append(
         {
             "question": question,
             "answer": answer,
             "sources": sources,
+            "retrieval_details": retrieval_details,
             "created_at": datetime.utcnow().isoformat(),
         }
     )
@@ -95,3 +96,5 @@ def _with_history_summary(document: dict[str, Any], chats: dict[str, list[dict[s
         "chat_count": len(chat_items),
         "history_activities": activities,
     }
+
+

@@ -1,4 +1,4 @@
-import json
+﻿import json
 import math
 from pathlib import Path
 from typing import Any
@@ -69,6 +69,7 @@ class VectorService:
                         "page_number": metadata.get("page_number"),
                         "file_name": metadata.get("file_name"),
                         "score": distance,
+                        "score_type": "distance",
                     }
                 )
             return matches
@@ -88,6 +89,7 @@ class VectorService:
                 "page_number": chunk.get("page_number"),
                 "file_name": chunk.get("file_name"),
                 "score": self._cosine(vector, chunk.get("embedding", [])),
+                "score_type": "similarity",
             }
             for chunk in ranked[:top_k]
         ]
@@ -107,3 +109,5 @@ class VectorService:
         left_norm = math.sqrt(sum(a * a for a in left)) or 1.0
         right_norm = math.sqrt(sum(b * b for b in right)) or 1.0
         return dot / (left_norm * right_norm)
+
+

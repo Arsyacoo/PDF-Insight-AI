@@ -5,6 +5,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from services.chunk_service import chunk_pages
 from services.pdf_service import extract_pdf_text
+from services.quality_service import assess_document_quality
 from services.storage_service import save_document
 from services.vector_service import VectorService
 
@@ -37,6 +38,7 @@ async def upload_pdf(file: UploadFile = File(...)):
 
     try:
         extracted = extract_pdf_text(file_path)
+        quality = assess_document_quality(extracted)
         chunks = chunk_pages(extracted["pages"], document_id, safe_name)
         VectorService().add_chunks(chunks)
     except ValueError as exc:
@@ -50,6 +52,7 @@ async def upload_pdf(file: UploadFile = File(...)):
         "total_pages": extracted["total_pages"],
         "text_preview": extracted["preview"],
         "chunk_count": len(chunks),
+        "quality": quality,
     }
     save_document(document)
     return {
@@ -58,4 +61,5 @@ async def upload_pdf(file: UploadFile = File(...)):
         "total_pages": extracted["total_pages"],
         "text_preview": extracted["preview"],
         "message": "PDF berhasil diunggah dan diproses.",
+        "quality": quality,
     }

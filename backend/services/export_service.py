@@ -175,3 +175,117 @@ def _write_pdf(path: Path, title: str, lines: list[str]) -> None:
 
 def _pdf_escape(text: str) -> str:
     return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+
+def export_full_report_pdf(document_id: str) -> Path:
+    document = get_document(document_id)
+    if not document:
+        raise KeyError("Dokumen tidak ditemukan.")
+
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+    EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+    path = EXPORT_DIR / f"{document_id}-full-report.pdf"
+    styles = getSampleStyleSheet()
+    story = [Paragraph("PDF Insight AI - Full Analysis Report", styles["Title"]), Spacer(1, 12)]
+    for heading, lines in _report_sections(document):
+        story.append(Paragraph(heading, styles["Heading2"]))
+        if heading == "Document Quality":
+            quality = document.get("quality") or {}
+            rows = [["Metric", "Value"]] + [[key.replace("_", " ").title(), str(value)] for key, value in quality.items()]
+            table = Table(rows, hAlign="LEFT")
+            table.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EEF2FF")),
+                ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#CBD5E1")),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ]))
+            story.append(table)
+        else:
+            for line in lines:
+                story.append(Paragraph(_escape_reportlab(line), styles["BodyText"]))
+        story.append(Spacer(1, 10))
+    SimpleDocTemplate(str(path), pagesize=A4, title="PDF Insight AI Report").build(story)
+    return path
+
+
+def export_full_report_docx(document_id: str) -> Path:
+    document = get_document(document_id)
+    if not document:
+        raise KeyError("Dokumen tidak ditemukan.")
+
+    from docx import Document
+
+    EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+    path = EXPORT_DIR / f"{document_id}-full-report.docx"
+    doc = Document()
+    doc.add_heading("PDF Insight AI - Full Analysis Report", level=0)
+    for heading, lines in _report_sections(document):
+        doc.add_heading(heading, level=1)
+        if heading == "Document Quality":
+            quality = document.get("quality") or {}
+            table = doc.add_table(rows=1, cols=2)
+            table.rows[0].cells[0].text = "Metric"
+            table.rows[0].cells[1].text = "Value"
+            for key, value in quality.items():
+                row = table.add_row().cells
+                row[0].text = key.replace("_", " ").title()
+                row[1].text = str(value)
+        else:
+            for line in lines:
+                doc.add_paragraph(line)
+    doc.save(path)
+    return path
+
+
+def _report_sections(document: dict) -> list[tuple[str, list[str]]]:
+    analysis = document.get("analysis") or {}
+    chat_history = get_chat_history(document["document_id"])
+    sections = [
+        ("Document Info", [
+            f"File name: {document.get('file_name', '-')}",
+            f"Total pages: {document.get('total_pages', '-')}",
+            f"Upload date: {document.get('upload_date', '-')}",
+            f"Generated date: {__import__('datetime').datetime.utcnow().isoformat()} UTC",
+        ]),
+        ("Document Quality", []),
+        ("Summary", [document.get("summary") or analysis.get("summary") or "Ringkasan belum tersedia."]),
+        ("Key Points", [f"- {item}" for item in analysis.get("key_points", [])] or ["Poin penting belum tersedia."]),
+        ("Keywords", [", ".join(analysis.get("keywords", [])) or "Keywords belum tersedia."]),
+        ("Suggested Questions", [f"- {item}" for item in analysis.get("suggested_questions", [])] or ["Pertanyaan saran belum tersedia."]),
+        ("Chat History", _chat_report_lines(chat_history)),
+        ("Quiz", _quiz_report_lines(document.get("quiz", {}).get("quiz", []))),
+        ("Flashcards", _flashcard_report_lines(document.get("flashcards", {}).get("flashcards", []))),
+    ]
+    return sections
+
+
+def _chat_report_lines(chat_history: list[dict]) -> list[str]:
+    lines = []
+    for index, item in enumerate(chat_history, start=1):
+        lines.extend([f"Chat {index}", f"Q: {item.get('question', '-')}", f"A: {item.get('answer', '-')}"])
+        for source in item.get("sources", []):
+            lines.append(f"Source page {source.get('page_number', '-')}: {source.get('snippet', '-')}")
+    return lines or ["Chat belum tersedia."]
+
+
+def _quiz_report_lines(items: list[dict]) -> list[str]:
+    lines = []
+    for index, item in enumerate(items, start=1):
+        lines.append(f"{index}. {item.get('question', '-')}")
+        lines.append(f"Answer: {item.get('answer', '-')}")
+    return lines or ["Quiz belum tersedia."]
+
+
+def _flashcard_report_lines(items: list[dict]) -> list[str]:
+    lines = []
+    for index, item in enumerate(items, start=1):
+        lines.extend([f"Flashcard {index}", f"Front: {item.get('front', '-')}", f"Back: {item.get('back', '-')}"])
+    return lines or ["Flashcards belum tersedia."]
+
+
+def _escape_reportlab(text: str) -> str:
+    return escape(str(text)).replace("\n", "<br/>")

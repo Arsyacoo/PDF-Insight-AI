@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+﻿import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { deleteDocument, getDocuments } from "../api/api.js";
 import DocumentCard from "../components/DocumentCard.jsx";
@@ -15,7 +15,7 @@ export default function HistoryPage() {
   useEffect(() => {
     getDocuments()
       .then(setDocuments)
-      .catch(() => setError("History belum bisa dimuat. Pastikan backend berjalan."))
+      .catch(() => setError("Riwayat belum bisa dimuat. Pastikan backend berjalan."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -26,7 +26,7 @@ export default function HistoryPage() {
       }
     }, 250);
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, loading]);
 
   const filtered = useMemo(() => {
     const keyword = query.toLowerCase();
@@ -51,29 +51,31 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 px-5 py-8">
-      <div className="rounded-lg bg-white p-5 shadow-sm">
-        <h1 className="text-2xl font-extrabold">History & Export</h1>
-        <p className="mt-1 text-muted">Lihat, cari, export, atau hapus dokumen yang sudah diunggah.</p>
-      </div>
-      <div className="glass flex items-center gap-3 rounded-lg p-4">
-        <Search className="text-muted" size={20} />
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          className="w-full bg-transparent outline-none"
-          placeholder="Cari berdasarkan nama dokumen atau preview..."
-        />
+    <div className="mx-auto max-w-7xl px-5 py-8">
+      <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight text-ink md:text-5xl">Riwayat Dokumen</h1>
+          <p className="mt-3 text-lg text-muted">Akses dan kelola hasil analisis AI dari dokumen Anda.</p>
+        </div>
+        <div className="flex w-full items-center gap-3 rounded-2xl border border-line bg-white px-5 py-4 shadow-sm lg:max-w-md">
+          <Search className="shrink-0 text-muted" size={26} />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className="w-full bg-transparent text-lg outline-none placeholder:text-muted/70"
+            placeholder="Cari dokumen..."
+          />
+        </div>
       </div>
       <ErrorState message={error} />
-      {loading && <LoadingState label="Memuat history..." />}
+      {loading && <LoadingState label="Memuat riwayat..." />}
       {!loading && filtered.length === 0 && (
         <EmptyState
-          title={query ? "Dokumen tidak ditemukan" : "No history yet"}
-          description={query ? "Coba kata kunci lain atau upload PDF baru." : "Upload PDF pertama untuk melihat history di sini."}
+          title={query ? "Dokumen tidak ditemukan" : "Belum ada riwayat"}
+          description={query ? "Coba kata kunci lain atau upload PDF baru." : "Upload PDF pertama untuk melihat riwayat di sini."}
         />
       )}
-      <div className="grid gap-4">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {groupedDocuments.map((group) => (
           <DocumentCard
             key={group.key}
@@ -83,12 +85,6 @@ export default function HistoryPage() {
           />
         ))}
       </div>
-      <section className="rounded-lg bg-ink p-6 text-white">
-        <h2 className="text-2xl font-extrabold">Bulk Export Intelligence</h2>
-        <p className="mt-2 max-w-2xl text-white/70">
-          Export per dokumen tersedia dalam format TXT, PDF, dan Word. Hapus dokumen lama untuk menjaga storage lokal tetap rapi.
-        </p>
-      </section>
     </div>
   );
 }

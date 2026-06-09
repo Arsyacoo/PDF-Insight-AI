@@ -1,6 +1,6 @@
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { getDocuments } from "../api/api.js";
+import { deleteDocument, getDocuments } from "../api/api.js";
 import DocumentCard from "../components/DocumentCard.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import ErrorState from "../components/ErrorState.jsx";
@@ -37,11 +37,24 @@ export default function HistoryPage() {
 
   const groupedDocuments = useMemo(() => groupDocuments(filtered), [filtered]);
 
+  async function handleDelete(document) {
+    const confirmed = window.confirm(`Hapus dokumen "${document.file_name}" beserta chat, export, dan data vector terkait?`);
+    if (!confirmed) return;
+
+    setError("");
+    try {
+      await deleteDocument(document.document_id);
+      setDocuments((current) => current.filter((item) => item.document_id !== document.document_id));
+    } catch (err) {
+      setError(err.response?.data?.detail || "Dokumen gagal dihapus.");
+    }
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-5 px-5 py-8">
       <div className="rounded-lg bg-white p-5 shadow-sm">
         <h1 className="text-2xl font-extrabold">History & Export</h1>
-        <p className="mt-1 text-muted">Lihat dokumen yang sudah diunggah dan export summary atau chat sebagai TXT.</p>
+        <p className="mt-1 text-muted">Lihat, cari, export, atau hapus dokumen yang sudah diunggah.</p>
       </div>
       <div className="glass flex items-center gap-3 rounded-lg p-4">
         <Search className="text-muted" size={20} />
@@ -66,13 +79,14 @@ export default function HistoryPage() {
             key={group.key}
             document={group.primary}
             relatedDocuments={group.documents}
+            onDelete={handleDelete}
           />
         ))}
       </div>
       <section className="rounded-lg bg-ink p-6 text-white">
         <h2 className="text-2xl font-extrabold">Bulk Export Intelligence</h2>
         <p className="mt-2 max-w-2xl text-white/70">
-          Export per dokumen sudah tersedia dalam format TXT. Export PDF dan DOCX dapat dikembangkan sebagai peningkatan berikutnya.
+          Export per dokumen tersedia dalam format TXT, PDF, dan Word. Hapus dokumen lama untuk menjaga storage lokal tetap rapi.
         </p>
       </section>
     </div>

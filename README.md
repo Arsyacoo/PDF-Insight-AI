@@ -6,7 +6,7 @@ Project ini dirancang sebagai **student capstone project** atau **portfolio proj
 
 ## Fitur Utama
 
-- Upload file PDF dengan validasi format.
+- Upload file PDF berbasis teks dengan validasi format dan kualitas teks.
 - Preview PDF langsung di halaman chat.
 - Clickable source references untuk membuka halaman PDF terkait.
 - Confidence score dan confidence label pada setiap source reference.
@@ -31,7 +31,8 @@ Project ini dirancang sebagai **student capstone project** atau **portfolio proj
 - Perbandingan dua dokumen PDF.
 - History dokumen dan chat per dokumen.
 - Search dokumen di halaman history.
-- Export ringkasan dan chat ke format TXT.
+- Hapus dokumen beserta chat, file export, dan vector chunks terkait.
+- Export aktivitas dokumen ke format TXT, PDF, dan DOCX.
 - UI responsif untuk desktop dan mobile.
 
 ## Tech Stack
@@ -84,7 +85,8 @@ FastAPI Backend
   |-- Vector Search
   |-- Groq LLM Response
   |-- Local JSON History
-  |-- TXT Export
+  |-- Document Cleanup
+  |-- TXT/PDF/DOCX Export
 ```
 
 Alur RAG:
@@ -209,6 +211,7 @@ cp .env.example .env
 ```bash
 uvicorn main:app --reload
 ```
+
 
 Backend akan berjalan di:
 
@@ -652,14 +655,12 @@ Simpan screenshot aplikasi di folder `screenshots/`, lalu gunakan path berikut. 
 
 ## Project Limitations
 
-- Aplikasi ini paling baik untuk PDF berbasis teks. PDF hasil scan atau gambar murni membutuhkan OCR terlebih dahulu agar teks dapat diekstrak.
-- Fitur OCR belum tersedia secara default di project ini.
+- Aplikasi ini hanya mendukung PDF berbasis teks. PDF hasil scan/gambar perlu dikonversi menjadi PDF teks terlebih dahulu.
 - Kualitas ringkasan, quiz, flashcards, compare, dan chat bergantung pada kualitas teks hasil ekstraksi PDF.
 - Jika `GROQ_API_KEY` belum diatur atau Groq API gagal diakses, aplikasi memakai fallback lokal sederhana sehingga hasil AI tidak sebaik mode Groq aktif.
 - Upload PDF dibatasi maksimal 10 MB untuk menjaga performa lokal.
 - Data disimpan secara lokal dalam file JSON, sehingga belum cocok untuk skenario multi-user production.
 
-- Full OCR belum diimplementasikan; PDF scan tetap membutuhkan proses OCR eksternal.
 
 - PDF preview menggunakan dukungan PDF bawaan browser melalui object/embed, sehingga perilakunya bisa berbeda antar browser.
 
@@ -668,7 +669,6 @@ Simpan screenshot aplikasi di folder `screenshots/`, lalu gunakan path berikut. 
 ## Future Improvements
 
 - Template export PDF dan DOCX yang lebih kaya secara visual.
-- OCR untuk PDF hasil scan.
 - Highlight teks sumber langsung pada preview PDF.
 - Authentication untuk multi-user.
 - Database permanen seperti PostgreSQL.

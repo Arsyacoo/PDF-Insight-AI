@@ -37,6 +37,10 @@ export default function UploadPage() {
   return (
     <div className="mx-auto max-w-5xl px-5 py-8">
       <UploadBox onFile={handleFile} progress={progress} uploading={uploading} />
+      <section className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber">
+        <p className="font-bold text-ink">Catatan upload</p>
+        <p className="mt-1">PDF scan/gambar belum didukung. Gunakan PDF yang teksnya bisa diblok/select agar analisis, chat, quiz, dan flashcards akurat.</p>
+      </section>
       <div className="mt-5">
         <ErrorState message={error} />
       </div>

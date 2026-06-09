@@ -14,7 +14,7 @@ def assess_document_quality(extracted: dict[str, Any]) -> dict[str, Any]:
 
     if scan_probability >= 0.6 or average_characters_per_page < 80:
         label = "Poor"
-        recommendation = "Dokumen kemungkinan hasil scan atau teksnya sangat sedikit. Gunakan OCR agar hasil AI lebih akurat."
+        recommendation = "Dokumen kemungkinan hasil scan atau teksnya sangat sedikit. Gunakan PDF berbasis teks agar hasil AI lebih akurat."
     elif scan_probability >= 0.25 or average_characters_per_page < 250:
         label = "Fair"
         recommendation = "Sebagian halaman memiliki teks terbatas. Hasil masih bisa digunakan, tetapi mungkin kurang lengkap."

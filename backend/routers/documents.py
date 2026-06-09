@@ -6,10 +6,12 @@ from fastapi.responses import FileResponse
 
 from services.pdf_service import extract_pdf_text
 from services.quality_service import assess_document_quality
-from services.storage_service import get_chat_history, get_document, list_documents, search_documents, update_document
+from services.storage_service import delete_document_record, get_chat_history, get_document, list_documents, search_documents, update_document
+from services.vector_service import VectorService
 
 router = APIRouter(tags=["Documents"])
 UPLOAD_ROOT = Path(__file__).resolve().parents[1] / "uploads"
+EXPORT_ROOT = Path(__file__).resolve().parents[1] / "exports"
 
 
 @router.get("/documents")
@@ -25,6 +27,19 @@ def document_detail(document_id: str):
     document = _ensure_quality(document_id, document)
     return {**document, "chat_history": get_chat_history(document_id)}
 
+
+
+@router.delete("/documents/{document_id}")
+def delete_document(document_id: str):
+    try:
+        document = delete_document_record(document_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    _delete_uploaded_file(document)
+    _delete_export_files(document_id)
+    VectorService().delete_document_chunks(document_id)
+    return {"message": "Dokumen berhasil dihapus.", "document_id": document_id}
 
 @router.get("/documents/{document_id}/file")
 def document_file(document_id: str):
@@ -61,3 +76,22 @@ def _ensure_quality(document_id: str, document: dict) -> dict:
     except ValueError:
         return document
     return update_document(document_id, {"quality": quality})
+
+def _delete_uploaded_file(document: dict) -> None:
+    file_path = Path(document.get("file_path", ""))
+    try:
+        resolved = file_path.resolve()
+        if UPLOAD_ROOT.resolve() in resolved.parents and resolved.exists():
+            resolved.unlink()
+    except OSError:
+        pass
+
+def _delete_export_files(document_id: str) -> None:
+    if not EXPORT_ROOT.exists():
+        return
+    for path in EXPORT_ROOT.glob(f"{document_id}-*"):
+        try:
+            if path.is_file():
+                path.unlink()
+        except OSError:
+            pass

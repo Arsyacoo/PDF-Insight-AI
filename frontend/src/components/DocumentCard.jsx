@@ -1,4 +1,4 @@
-﻿import { BarChart3, BookOpenCheck, Download, FileText, Layers3, MessageSquareText } from "lucide-react";
+﻿import { BarChart3, BookOpenCheck, Download, FileText, Layers3, MessageSquareText, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { exportActivityUrl } from "../api/api.js";
 import ExportReportButtons from "./ExportReportButtons.jsx";
@@ -17,7 +17,7 @@ const EXPORT_FORMATS = [
   ["docx", "Word"],
 ];
 
-export default function DocumentCard({ document, relatedDocuments = [] }) {
+export default function DocumentCard({ document, relatedDocuments = [], onDelete }) {
   const documents = relatedDocuments.length ? relatedDocuments : [document];
   const activities = mergeActivities(documents);
   const duplicateCount = documents.length;
@@ -50,6 +50,13 @@ export default function DocumentCard({ document, relatedDocuments = [] }) {
           </Link>
           <ExportMenu documentId={document.document_id} activities={activities} />
           <ExportReportButtons documentId={document.document_id} />
+          <button
+            type="button"
+            onClick={() => onDelete?.(document)}
+            className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-danger hover:bg-red-50"
+          >
+            <Trash2 className="inline" size={15} /> Hapus
+          </button>
         </div>
       </div>
       <div className="mt-4 rounded-lg bg-soft p-4">

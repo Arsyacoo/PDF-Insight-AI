@@ -18,6 +18,7 @@ export async function uploadPdf(file, onUploadProgress) {
 
 export const getDocuments = async (q = "") => (await api.get("/documents", { params: q ? { q } : {} })).data.documents;
 export const getDocument = async (id) => (await api.get(`/documents/${id}`)).data;
+export const deleteDocument = async (id) => (await api.delete(`/documents/${id}`)).data;
 export const analyzeDocument = async (document_id) => (await api.post("/analyze", { document_id })).data;
 export const chatWithPdf = async (document_id, question) =>
   (await api.post("/chat", { document_id, question })).data;

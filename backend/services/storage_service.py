@@ -49,6 +49,18 @@ def update_document(document_id: str, values: dict[str, Any]) -> dict[str, Any]:
     save_document(document)
     return document
 
+def delete_document_record(document_id: str) -> dict[str, Any]:
+    documents = _read_json(DOCUMENTS_FILE, {})
+    document = documents.pop(document_id, None)
+    if not document:
+        raise KeyError("Dokumen tidak ditemukan.")
+
+    chats = _read_json(CHATS_FILE, {})
+    chats.pop(document_id, None)
+    _write_json(DOCUMENTS_FILE, documents)
+    _write_json(CHATS_FILE, chats)
+    return document
+
 
 def add_chat(document_id: str, question: str, answer: str, sources: list[dict[str, Any]], retrieval_details: dict[str, Any] | None = None) -> None:
     chats = _read_json(CHATS_FILE, {})

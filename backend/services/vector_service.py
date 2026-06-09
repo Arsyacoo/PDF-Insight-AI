@@ -47,6 +47,22 @@ class VectorService:
             stored[chunk["chunk_id"]] = {**chunk, "embedding": vector}
         JSON_STORE.write_text(json.dumps(stored, ensure_ascii=False, indent=2), encoding="utf-8")
 
+    def delete_document_chunks(self, document_id: str) -> None:
+        if self.collection:
+            try:
+                self.collection.delete(where={"document_id": document_id})
+            except Exception:
+                pass
+
+        stored = self._read_json_store()
+        filtered = {
+            chunk_id: chunk
+            for chunk_id, chunk in stored.items()
+            if chunk.get("document_id") != document_id
+        }
+        if len(filtered) != len(stored):
+            JSON_STORE.write_text(json.dumps(filtered, ensure_ascii=False, indent=2), encoding="utf-8")
+
     def search(self, document_id: str, question: str, top_k: int = 5) -> list[dict[str, Any]]:
         vector = self.embeddings.embed([question])[0]
         if self.collection:
@@ -109,5 +125,3 @@ class VectorService:
         left_norm = math.sqrt(sum(a * a for a in left)) or 1.0
         right_norm = math.sqrt(sum(b * b for b in right)) or 1.0
         return dot / (left_norm * right_norm)
-
-

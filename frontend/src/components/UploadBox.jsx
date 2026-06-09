@@ -5,7 +5,7 @@ export default function UploadBox({ onFile, progress, uploading }) {
     <label className="glass flex min-h-72 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-line p-8 text-center transition hover:border-primary hover:bg-white">
       <CloudUpload className="mb-4 text-primary" size={48} />
       <h2 className="text-2xl font-bold">Upload PDF</h2>
-      <p className="mt-2 max-w-md text-muted">Pilih file PDF berbasis teks untuk diringkas, dianalisis, dan ditanya jawab dengan RAG.</p>
+      <p className="mt-2 max-w-md text-muted">Pilih PDF berbasis teks. PDF scan/gambar belum didukung karena teksnya tidak bisa diekstrak langsung.</p>
       <input
         className="hidden"
         type="file"

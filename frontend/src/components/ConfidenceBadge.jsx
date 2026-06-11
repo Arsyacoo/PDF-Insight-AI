@@ -1,13 +1,17 @@
-﻿const styles = {
-  High: "bg-green-50 text-green-700 border-green-200",
-  Medium: "bg-amber-50 text-amber-700 border-amber-200",
-  Low: "bg-red-50 text-red-700 border-red-200",
+const styles = {
+  "High Relevance": "bg-green-100 text-success",
+  "Medium Relevance": "bg-amber-100 text-amber",
+  "Low Relevance": "bg-red-100 text-danger",
+  High: "bg-green-100 text-success",
+  Medium: "bg-amber-100 text-amber",
+  Low: "bg-red-100 text-danger",
 };
 
-export default function ConfidenceBadge({ label = "Low" }) {
+export default function ConfidenceBadge({ label = "Low Relevance" }) {
+  const normalized = label === "High" ? "High Relevance" : label === "Medium" ? "Medium Relevance" : label === "Low" ? "Low Relevance" : label;
   return (
-    <span className={`rounded-full border px-2 py-1 text-xs font-bold ${styles[label] || styles.Low}`}>
-      {label} Confidence
+    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${styles[normalized] || styles["Low Relevance"]}`}>
+      {normalized}
     </span>
   );
 }

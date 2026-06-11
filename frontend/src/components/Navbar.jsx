@@ -1,4 +1,4 @@
-﻿import { Bell, CircleUserRound, FileUp, Menu } from "lucide-react";
+﻿import { Bell, CircleUserRound, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.svg";
 

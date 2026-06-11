@@ -62,7 +62,7 @@ def delete_document_record(document_id: str) -> dict[str, Any]:
     return document
 
 
-def add_chat(document_id: str, question: str, answer: str, sources: list[dict[str, Any]], retrieval_details: dict[str, Any] | None = None) -> None:
+def add_chat(document_id: str, question: str, answer: str, sources: list[dict[str, Any]], retrieval_details: dict[str, Any] | None = None, response_mode: str = "llm") -> None:
     chats = _read_json(CHATS_FILE, {})
     chats.setdefault(document_id, []).append(
         {
@@ -70,6 +70,7 @@ def add_chat(document_id: str, question: str, answer: str, sources: list[dict[st
             "answer": answer,
             "sources": sources,
             "retrieval_details": retrieval_details,
+            "response_mode": response_mode,
             "created_at": datetime.utcnow().isoformat(),
         }
     )
@@ -87,7 +88,7 @@ def search_documents(query: str) -> list[dict[str, Any]]:
     return [
         document
         for document in list_documents()
-        if keyword in f"{document.get('file_name', '')} {document.get('text_preview', '')} {document.get('summary', '')}".lower()
+        if keyword in f"{document.get('display_name', '')} {document.get('file_name', '')} {document.get('text_preview', '')} {document.get('summary', '')}".lower()
     ]
 
 def _with_history_summary(document: dict[str, Any], chats: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:

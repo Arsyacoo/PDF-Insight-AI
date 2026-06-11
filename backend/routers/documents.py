@@ -3,6 +3,7 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 
 from services.pdf_service import extract_pdf_text
 from services.quality_service import assess_document_quality
@@ -12,6 +13,9 @@ from services.vector_service import VectorService
 router = APIRouter(tags=["Documents"])
 UPLOAD_ROOT = Path(__file__).resolve().parents[1] / "uploads"
 EXPORT_ROOT = Path(__file__).resolve().parents[1] / "exports"
+
+class RenameDocumentRequest(BaseModel):
+    display_name: str
 
 
 @router.get("/documents")
@@ -28,6 +32,22 @@ def document_detail(document_id: str):
     return {**document, "chat_history": get_chat_history(document_id)}
 
 
+
+
+@router.patch("/documents/{document_id}")
+def rename_document(document_id: str, request: RenameDocumentRequest):
+    display_name = " ".join(request.display_name.split())
+    if not display_name:
+        raise HTTPException(status_code=400, detail="Nama dokumen tidak boleh kosong.")
+    if len(display_name) > 120:
+        raise HTTPException(status_code=400, detail="Nama dokumen maksimal 120 karakter.")
+
+    try:
+        document = update_document(document_id, {"display_name": display_name})
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return {"message": "Nama dokumen berhasil diperbarui.", "document": document}
 
 @router.delete("/documents/{document_id}")
 def delete_document(document_id: str):

@@ -2,7 +2,6 @@ import {
   AlertTriangle,
   ArrowRight,
   BookOpen,
-  Bot,
   BrainCircuit,
   BriefcaseBusiness,
   CheckCircle2,

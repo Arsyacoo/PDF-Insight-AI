@@ -1,3 +1,4 @@
+import logging
 import os
 
 from dotenv import load_dotenv
@@ -7,6 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import analysis, chat, documents, export, learning, upload
 
 load_dotenv()
+
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO").upper(),
+    format="%(levelname)s:%(name)s:%(message)s",
+)
 
 app = FastAPI(title="PDF Insight AI API", version="1.0.0")
 

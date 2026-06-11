@@ -1,4 +1,4 @@
-﻿import { BarChart3, BookOpenCheck, Clock3, Download, FileText, Layers3, MessageSquareText, Trash2 } from "lucide-react";
+﻿import { BarChart3, BookOpenCheck, Clock3, Download, FilePenLine, FileText, Layers3, MessageSquareText, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { exportActivityUrl } from "../api/api.js";
 import ExportReportButtons from "./ExportReportButtons.jsx";
@@ -17,11 +17,12 @@ const EXPORT_FORMATS = [
   ["docx", "Word"],
 ];
 
-export default function DocumentCard({ document, relatedDocuments = [], onDelete }) {
+export default function DocumentCard({ document, relatedDocuments = [], onDelete, onRename }) {
   const documents = relatedDocuments.length ? relatedDocuments : [document];
   const activities = mergeActivities(documents);
   const duplicateCount = documents.length;
   const qualityLabel = document.quality?.quality_label || (document.quality?.scan_probability >= 0.25 ? "Fair" : "Good");
+  const title = document.display_name || cleanFileName(document.file_name);
 
   return (
     <article className="group rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-primary/30 hover:shadow-soft">
@@ -30,7 +31,7 @@ export default function DocumentCard({ document, relatedDocuments = [], onDelete
           <FileText size={30} />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-lg font-black text-ink">{cleanFileName(document.file_name)}</h3>
+          <h3 className="truncate text-lg font-black text-ink">{title}</h3>
           <p className="mt-2 font-mono text-sm text-muted">
             {document.total_pages} halaman • {document.chunk_count || 0} chunk
             {duplicateCount > 1 && ` • ${duplicateCount} upload`}
@@ -74,6 +75,13 @@ export default function DocumentCard({ document, relatedDocuments = [], onDelete
         </Link>
         <ExportMenu documentId={document.document_id} activities={activities} />
         <ExportReportButtons documentId={document.document_id} />
+        <button
+          type="button"
+          onClick={() => onRename?.(document)}
+          className="rounded-xl border border-line px-3 py-2 text-sm font-bold text-muted hover:border-primary/40 hover:text-primary"
+        >
+          <FilePenLine className="inline" size={15} /> Rename
+        </button>
         <button
           type="button"
           onClick={() => onDelete?.(document)}

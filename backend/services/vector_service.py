@@ -19,8 +19,11 @@ class VectorService:
 
             self.client = chromadb.PersistentClient(path=str(VECTOR_DIR / "chroma"))
             self.collection = self.client.get_or_create_collection(name="pdf_chunks")
+            metadata = getattr(self.collection, "metadata", None) or {}
+            self.chroma_space = metadata.get("hnsw:space", "l2")
         except Exception:
             self.client = None
+            self.chroma_space = None
 
     def add_chunks(self, chunks: list[dict[str, Any]]) -> None:
         if not chunks:
@@ -85,7 +88,7 @@ class VectorService:
                         "page_number": metadata.get("page_number"),
                         "file_name": metadata.get("file_name"),
                         "score": distance,
-                        "score_type": "distance",
+                        "score_type": self._chroma_score_type(),
                     }
                 )
             return matches
@@ -109,6 +112,13 @@ class VectorService:
             }
             for chunk in ranked[:top_k]
         ]
+
+    def _chroma_score_type(self) -> str:
+        if self.chroma_space == "cosine":
+            return "distance_cosine"
+        if self.chroma_space in {"l2", "ip"}:
+            return f"distance_{self.chroma_space}"
+        return "distance_l2"
 
     def _read_json_store(self) -> dict[str, Any]:
         if not JSON_STORE.exists():

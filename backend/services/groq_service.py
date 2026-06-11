@@ -43,10 +43,10 @@ def ask_groq(question: str, context: str, task: str = "chat") -> str:
         )
     except Exception as exc:
         logger.warning(
-            "Groq API request failed; using offline fallback. task=%s model=%s error=%s",
+            "operation=groq_completion category=groq_failed task=%s model=%s exception_class=%s",
             task,
             model,
-            exc,
+            exc.__class__.__name__,
         )
         return _offline_answer(question, context)
 

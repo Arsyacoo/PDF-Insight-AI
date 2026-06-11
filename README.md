@@ -9,7 +9,7 @@ Project ini dirancang sebagai **student capstone project** atau **portfolio proj
 - Upload file PDF berbasis teks dengan validasi format dan kualitas teks.
 - Preview PDF langsung di halaman chat.
 - Clickable source references untuk membuka halaman PDF terkait.
-- Confidence score dan confidence label pada setiap source reference.
+- Source relevance score dan relevance label pada setiap source reference.
 - RAG retrieval details untuk menjelaskan chunk yang dipakai sebagai konteks AI.
 - Document quality checker untuk mendeteksi kualitas teks dan kemungkinan PDF scan.
 - Export full analysis report ke PDF dan DOCX.
@@ -148,6 +148,33 @@ pdf-insight-ai/
   README.md
 ```
 
+
+## Retrieval Relevance dan Response Mode
+
+Chat PDF menggunakan pencarian vector yang dibatasi per `document_id`. Setiap chunk hasil retrieval dinilai sebagai **retrieval relevance**, yaitu ukuran kecocokan chunk terhadap pertanyaan pengguna. Nilai ini **bukan jaminan akurasi jawaban AI**.
+
+Konfigurasi threshold tersedia di `backend/.env`:
+
+```env
+RAG_MIN_RELEVANCE_SCORE=0.25
+RAG_MIN_RELEVANT_CHUNKS=1
+```
+
+Jika tidak ada chunk yang melewati threshold, backend mengembalikan `response_mode: "not_found"`, `sources: []`, dan jawaban `Informasi tersebut tidak ditemukan dalam dokumen.` Chunk yang ditolak tetap dapat muncul di `retrieval_details.results` untuk debugging dengan field `passed_threshold`, `raw_score`, `score_type`, dan `relevance_score`, tetapi tidak ditampilkan sebagai source pendukung.
+
+Nilai `response_mode` pada chat:
+
+- `llm`: jawaban dibuat dari layanan AI menggunakan context relevan.
+- `offline_fallback`: fallback lokal dipakai karena API key tidak tersedia atau layanan AI gagal di layer service.
+- `not_found`: tidak ada chunk relevan melewati threshold.
+- `api_error`: context relevan tersedia, tetapi pemanggilan AI gagal secara tidak terduga.
+
+PDF rusak atau tidak dapat dibaca akan ditolak dengan HTTP `422` dan pesan bersih: `File PDF rusak atau tidak dapat dibaca.` Detail parser internal hanya dicatat di log backend.
+
+Validasi export memakai schema FastAPI. Nilai query `section` atau `format` yang tidak sesuai akan ditolak dengan HTTP `422`.
+
+Field API `confidence_label` masih dipertahankan sementara sebagai kompatibilitas mundur untuk history/klien lama, tetapi field ini deprecated. Gunakan `relevance_label` dan `relevance_score` untuk integrasi baru.
+
 ## Setup Backend
 
 > Prasyarat: install Python 3.10+ terlebih dahulu. Jalankan perintah berikut dari root project `pdf-insight-ai`.
@@ -274,6 +301,10 @@ GROQ_API_KEY=your_groq_api_key_here
 GROQ_MODEL=llama-3.1-8b-instant
 FRONTEND_URL=http://localhost:5173,http://127.0.0.1:5173
 USE_SENTENCE_TRANSFORMERS=false
+RAG_MIN_RELEVANCE_SCORE=0.25
+RAG_MIN_RELEVANT_CHUNKS=1
+DEBUG=false
+LOG_LEVEL=INFO
 ```
 
 Penjelasan:
@@ -282,6 +313,10 @@ Penjelasan:
 - `GROQ_MODEL`: Model Groq yang digunakan.
 - `FRONTEND_URL`: Origin frontend yang diizinkan oleh CORS.
 - `USE_SENTENCE_TRANSFORMERS`: Jika `false`, aplikasi memakai embedding lokal deterministik tanpa download model. Jika `true`, aplikasi mencoba memakai model `sentence-transformers/all-MiniLM-L6-v2` dari cache lokal.
+- `RAG_MIN_RELEVANCE_SCORE`: Threshold minimal retrieval relevance sebelum chunk dipakai sebagai konteks AI.
+- `RAG_MIN_RELEVANT_CHUNKS`: Jumlah minimal chunk relevan yang dibutuhkan untuk menjawab.
+- `DEBUG`: Jika `true`, backend dapat mencatat debug stack trace untuk troubleshooting lokal. Biarkan `false` untuk log normal yang aman.
+- `LOG_LEVEL`: Level logging backend, misalnya `INFO`, `WARNING`, atau `DEBUG`.
 
 Jika frontend perlu diarahkan ke backend lain, buat file:
 
@@ -652,6 +687,31 @@ Simpan screenshot aplikasi di folder `screenshots/`, lalu gunakan path berikut. 
 ![Compare Page](screenshots/compare-page.png)
 
 ![History Page](screenshots/history-page.png)
+
+
+## Quality Checks
+
+Backend:
+
+```bash
+cd backend
+python -m py_compile main.py routers/chat.py routers/documents.py routers/upload.py services/relevance_service.py services/vector_service.py services/embedding_service.py services/pdf_service.py
+python -m unittest discover -s tests -v
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm install
+npm run lint
+npm run test:run
+npm run build
+```
+
+## Manual E2E Checklist
+
+Checklist pengujian manual tersedia di `docs/MANUAL_TEST_CHECKLIST.md`. Gunakan checklist ini untuk verifikasi PDF preview, responsive layout, document quality, chat, dan export sebelum demo besar.
 
 ## Project Limitations
 
